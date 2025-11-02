@@ -23,3 +23,13 @@ hr {
   width: 60px;
   height: 60px;
 }
+
+.dp-button:not(:disabled):hover {
+  transform: scale(1.10);
+  filter: brightness(1.1);
+}
+
+.dp-button:not(:disabled):active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}

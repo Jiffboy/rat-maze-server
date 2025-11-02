@@ -16,6 +16,7 @@ export default function DirectionPad({data, balance, user_id}) {
   return (
     <div className={'item-container'}>
     <button className={`item-button ${getRarityType(data.rarity)}`}
+            title={data.description}
             disabled={balance < data.cost || (data.total_stock > 0 && data.current_stock <=0)}
             onClick={() => handleClick()}>
       <p>{data.name}</p>
