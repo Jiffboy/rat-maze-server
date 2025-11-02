@@ -1,0 +1,25 @@
+.direction-pad {
+  margin: 20px 20px;
+  display: grid;
+  grid-template-columns: 60px 60px 60px;
+  grid-template-rows: 60px 60px 60px;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+hr {
+  width: 80%;
+}
+
+.dp-button {
+  font-size: 1.5rem;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s, background-color 0.2s;
+}
+
+.empty {
+  width: 60px;
+  height: 60px;
+}

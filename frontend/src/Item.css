@@ -1,0 +1,60 @@
+.item-container {
+  padding: 0;
+  margin: 8px;
+}
+
+.item-button {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0px;
+  transition: transform 0.2s, filter 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.item-button:not(:disabled):hover {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+.item-button:not(:disabled):active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+.item-button.rarity-common {
+  background-color: #707070;
+  border-color: #707070;
+}
+
+.item-button.rarity-uncommon {
+  background-color: #1A8A00;
+  border-color: #1A8A00;
+}
+
+.item-button.rarity-rare {
+  background-color: #004080;
+  border-color: #004080;
+}
+
+.item-button.rarity-legendary {
+  background-color: #CC6600;
+  border-color: #CC6600;
+}
+
+.item-button:disabled {
+  background-color: #1a1a1a;
+  cursor: default;
+  transform: none;
+  filter: brightness(1);
+}
+
+p {
+  margin: 5px;
+}
+
+.item-cost {
+  margin-left: auto;
+}
