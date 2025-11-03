@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DirectionPad.css';
-import image from './rat.png';
+import image from './assets/rat.png';
 
 export default function DirectionPad({data}) {
   const [disableOverride, setDisableOverride] = useState(false)

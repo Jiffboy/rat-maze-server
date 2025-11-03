@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import DirectionPad from './DirectionPad'
 import Item from './Item'
 import './App.css'
+import loadingImg from './assets/loading.gif';
 
 export default function UserDataPanel() {
   const [userId, setUserId] = useState(null);
@@ -38,7 +39,14 @@ export default function UserDataPanel() {
   }, [userId]);
 
   if (!data) {
-    return <p>Loading...</p>;
+    return (
+      <div className='loading-container'>
+          <div>
+            <img className='loading-img' src={loadingImg}/>
+            <p>Loading...</p>
+          </div>
+      </div>
+    )
   }
 
   return (
