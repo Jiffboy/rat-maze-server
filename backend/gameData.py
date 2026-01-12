@@ -1,8 +1,8 @@
 import sqlite3
 import os
 from twitch import get_user
-import time
 import random
+import time
 from enum import Enum
 
 
@@ -23,12 +23,24 @@ class Rarity(Enum):
         return cls[data]
 
 
-class Directions:
-    def __init__(self):
-        self.up = False
-        self.right = False
-        self.down = False
-        self.left = False
+class Direction(Enum):
+    UP = "up"
+    RIGHT = "right"
+    DOWN = "down"
+    LEFT = "left"
+
+    def from_str(value):
+        try:
+            return Direction(value)
+        except ValueError:
+            return None
+
+    def to_str(self):
+        return self.value
+
+    @classmethod
+    def from_json(cls, data):
+        return cls[data]
 
 
 class Item:
@@ -55,10 +67,16 @@ class Item:
         }
 
 
-directions = Directions()
+directions = {
+    Direction.UP: False,
+    Direction.RIGHT: False,
+    Direction.DOWN: False,
+    Direction.LEFT: False
+}
 next_turn = 0
 votes = {}
 shop = []
+
 
 threshold = 2  # TODO: DB value
 inc = 1  # TODO: DB value
@@ -83,10 +101,10 @@ def start_game():
 
 
 def reset_votes():
-    votes["up"] = []
-    votes["right"] = []
-    votes["down"] = []
-    votes["left"] = []
+    votes[Direction.UP] = []
+    votes[Direction.RIGHT] = []
+    votes[Direction.DOWN] = []
+    votes[Direction.LEFT] = []
 
 
 def reset_shop():
@@ -123,7 +141,14 @@ def reset_shop():
         used_items.append(item.name)
 
 
+def can_vote(user):
+    return all(user.id not in lst for lst in votes.values())
+
+
 def end_vote(direction, cheese=False):
+    curr_time = int(time.time())
+    global next_turn
+
     if direction is not None:
         for user_id in votes[direction]:
             user = get_user(user_id)
@@ -132,21 +157,13 @@ def end_vote(direction, cheese=False):
             user.current_points += inc
             user.update()
     reset_votes()
+    next_turn = curr_time + turn_len
 
 
 def handle_votes():
-    curr_time = int(time.time())
-    global next_turn
-
     for direction, users in votes.items():
         if len(users) > threshold:
             end_vote(direction)
-            next_turn = curr_time + turn_len
-            return
-
-    if curr_time > next_turn:
-        next_turn = curr_time + turn_len
-        end_vote(get_top_direction())
 
 
 def get_top_direction():

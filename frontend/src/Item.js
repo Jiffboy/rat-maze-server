@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Item.css';
 
-export default function DirectionPad({data, balance, user_id}) {
+export default function DirectionPad({data, balance, socket}) {
     const handleClick = (direction) => {
-      fetch(`/ratmaze/buy?id=${user_id}&item=${data.id}`, {
-          method: "POST",
-        })
-          .then(/*handle whatever*/)
-          .catch((err) => console.error("Error:", err));
+      socket.current.emit("buy", { item: data.id})
   };
 
   const getRarityType = (rarity) => {

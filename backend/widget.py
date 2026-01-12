@@ -1,94 +1,69 @@
-from flask import Blueprint, request, abort
-import json
+from flask import Blueprint, request
 from twitch import get_user
+from socket_def import socketio
 import gameData
-import random
-import time
 
 
 widget_endpoint = Blueprint('widget_endpoint', __name__)
 
 
-@widget_endpoint.route('/ratmaze/userdata/<user_id>')
-def userdata(user_id):
-    user = get_user(user_id)
+# maps sid to user ids
+sid_map = {}
 
-    json_dict = {}
-    game_dict = {}
-
-    temp_mock_game()
-
-    game_dict["directions"] = gameData.directions.__dict__
-    game_dict["next_turn"] = gameData.next_turn
-    game_dict["shop"] = list([item.to_dict() for item in gameData.shop])
-
-    json_dict["user"] = user.__dict__
-    json_dict["game"] = game_dict
-    return json.dumps(json_dict)
+# TODO: Add disconnect! Remove from map
 
 
-@widget_endpoint.route('/ratmaze/vote', methods=['POST'])
-def vote():
-    user_id = request.args.get("id", type=int)
-    direction = request.args.get("direction")
-
-    user = get_user(user_id)
-    if all(user.id not in lst for lst in gameData.votes.values()):
-        match direction:
-            case "up":
-                if gameData.directions.up:
-                    gameData.votes["up"].append(user.id)
-                else:
-                    abort(400)
-                    return
-            case "right":
-                if gameData.directions.right:
-                    gameData.votes["right"].append(user.id)
-                else:
-                    abort(400)
-                    return
-            case "down":
-                if gameData.directions.down:
-                    gameData.votes["down"].append(user.id)
-                else:
-                    abort(400)
-                    return
-            case "left":
-                if gameData.directions.left:
-                    gameData.votes["left"].append(user.id)
-                else:
-                    abort(400)
-                    return
-        return {"message": "Submitted successfully."}
-    else:
-        abort(400)
+@socketio.on("connect", namespace="/ratmaze/widget")
+def on_connect(auth):
+    if request.sid not in sid_map:
+        sid_map[request.sid] = auth['id']
+    user = get_user(auth['id'])
+    send_update(user, request.sid)
 
 
-@widget_endpoint.route('/ratmaze/buy', methods=['POST'])
-def buy():
-    user_id = request.args.get("id", type=int)
-    item_id = request.args.get("item", type=int)
+@socketio.on("vote", namespace="/ratmaze/widget")
+def vote(data):
+    user_id = sid_map[request.sid]
+    direction = gameData.Direction.from_str(data['direction'])
+    if direction is not None:
+        user = get_user(user_id)
+
+        if gameData.can_vote(user):
+            gameData.votes[direction].append(user.id)
+            send_update(user, request.sid)
+
+
+@socketio.on("buy", namespace="/ratmaze/widget")
+def buy(data):
+    user_id = sid_map[request.sid]
+    item_id = data['item']
 
     user = get_user(user_id)
     item = next((i for i in gameData.shop if i.id == item_id), None)
     if item is not None:
         if user.balance >= item.cost:
-            if not (item.total_stock > 0 and item.current_stock <= 0):
+            if not (item.total_stock > 0 >= item.current_stock):
                 if item.total_stock > 0:
                     item.current_stock -= 1
                 user.balance -= item.cost
                 user.update()
-                return {"message": "Purchased successfully."}
-
-    abort(400)
+                send_update(user, request.sid)
 
 
-def temp_mock_game():
-    if int(time.time()) > gameData.next_turn:
-        gameData.directions.up = random.choice([True, False])
-        gameData.directions.left = random.choice([True, False])
-        gameData.directions.right = random.choice([True, False])
-        gameData.directions.down = random.choice([True, False])
-        # gameData.reset_shop()
-    gameData.handle_votes()
+def update_all():
+    for sid, user_id in sid_map.items():
+        user = get_user(user_id)
+        send_update(user, sid)
 
+
+def send_update(user, sid):
+    data = {
+        "user": user.__dict__,
+        "game": {
+            "directions": {key.to_str(): value for key, value in gameData.directions.items()},
+            "next_turn": gameData.next_turn,
+            "can_vote": gameData.can_vote(user),
+            "shop": list([item.to_dict() for item in gameData.shop])
+        }
+    }
+    socketio.emit("data_update", data, to=sid, namespace="/ratmaze/widget")

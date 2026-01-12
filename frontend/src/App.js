@@ -1,42 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import DirectionPad from './DirectionPad'
 import Item from './Item'
 import './App.css'
 import loadingImg from './assets/loading.gif';
+import { io } from 'socket.io-client'
 
 export default function UserDataPanel() {
   const [userId, setUserId] = useState(null);
   const [data, setData] = useState(null);
+  const socket = useRef(null)
 
   useEffect(() => {
     if (window.Twitch && window.Twitch.ext) {
       window.Twitch.ext.onAuthorized((auth) => {
         if (auth?.userId) {
           setUserId(auth.userId.slice(1));
+          socket.current = io( "/ratmaze/widget", {
+            auth: { id: auth.userId.slice(1) }
+          });
+
+          socket.current.on("data_update", (payload) => {
+            setData(payload)
+            console.log(payload)
+          })
         }
       });
     }
   }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/ratmaze/userdata/${userId}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setData(data.data ?? data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 500);
-
-    return () => clearInterval(interval);
-  }, [userId]);
 
   if (!data) {
     return (
@@ -48,7 +38,7 @@ export default function UserDataPanel() {
       </div>
     )
   }
-
+  console.log(data)
   return (
     <div>
       <div className="point-bar">
@@ -58,12 +48,13 @@ export default function UserDataPanel() {
       <p>{data.game.turn_start}</p>
       <DirectionPad
         data={data}
+        socket={socket}
       />
       <hr/>
       <p><strong>Balance:</strong> {data.user.balance}</p>
 
       {data.game.shop.map((item, index) => (
-        <Item data={item} balance={data.user.balance} user_id={data.user.id}/>
+        <Item data={item} balance={data.user.balance} socket={socket}/>
       ))}
     </div>
   );

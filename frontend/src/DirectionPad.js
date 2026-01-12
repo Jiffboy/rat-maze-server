@@ -2,41 +2,23 @@ import React, { useState, useEffect } from 'react';
 import './DirectionPad.css';
 import image from './assets/rat.png';
 
-export default function DirectionPad({data}) {
-  const [disableOverride, setDisableOverride] = useState(false)
-  const [nextTurn, setNextTurn] = useState(0)
-
-
+export default function DirectionPad({data, socket}) {
   const handleClick = (direction) => {
-      fetch(`/ratmaze/vote?id=${data.user.id}&direction=${direction}`, {
-          method: "POST",
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setDisableOverride(true)
-          })
-          .catch((err) => console.error("Error:", err));
-          };
-
-  useEffect(() => {
-    if (data.game.next_turn > nextTurn) {
-        setNextTurn(data.game.next_turn)
-        setDisableOverride(false)
-    }
-  }, [data])
+    socket.current.emit("vote", { direction: direction})
+  };
 
   return (
     <div className="direction-pad">
       <div className="empty" />
-      <button className="dp-button" disabled={!data.game.directions.up || disableOverride} onClick={() => handleClick('up')}>↑</button>
+      <button className="dp-button" disabled={!data.game.directions.up || !data.game.can_vote} onClick={() => handleClick('up')}>↑</button>
       <div className="empty" />
 
-      <button className="dp-button" disabled={!data.game.directions.left || disableOverride} onClick={() => handleClick('left')}>←</button>
+      <button className="dp-button" disabled={!data.game.directions.left || !data.game.can_vote} onClick={() => handleClick('left')}>←</button>
       <img className="empty" src={image}/>
-      <button className="dp-button" disabled={!data.game.directions.right || disableOverride} onClick={() => handleClick('right')}>→</button>
+      <button className="dp-button" disabled={!data.game.directions.right || !data.game.can_vote} onClick={() => handleClick('right')}>→</button>
 
       <div className="empty" />
-      <button className="dp-button" disabled={!data.game.directions.down || disableOverride} onClick={() => handleClick('down')}>↓</button>
+      <button className="dp-button" disabled={!data.game.directions.down || !data.game.can_vote} onClick={() => handleClick('down')}>↓</button>
       <div className="empty" />
     </div>
   );
