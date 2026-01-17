@@ -51,12 +51,9 @@ hr {
 }
 
 .point-bar {
-  display: flex;
-  margin: 0px 15px;
-}
-
-.point-right {
-  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 5px;
 }
 
 .loading-container {

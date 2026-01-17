@@ -3,6 +3,7 @@ import os
 from twitch import get_user
 import random
 import time
+import threading
 from enum import Enum
 
 
@@ -76,6 +77,8 @@ directions = {
 next_turn = 0
 votes = {}
 shop = []
+is_live = False
+live_event = threading.Event()
 
 
 threshold = 2  # TODO: DB value
@@ -98,6 +101,17 @@ def start_game():
     connection.commit()
     reset_votes()
     reset_shop()
+    live_event.set()
+
+
+def end_game():
+    global shop
+    global next_turn
+
+    reset_votes()
+    shop = []
+    next_turn = 0
+    live_event.clear()
 
 
 def reset_votes():

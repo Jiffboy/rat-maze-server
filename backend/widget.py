@@ -11,6 +11,19 @@ widget_endpoint = Blueprint('widget_endpoint', __name__)
 sid_map = {}
 
 # TODO: Add disconnect! Remove from map
+# TODO: Add encryption for streamer login
+# TODO: Figure out user encryption? Maybe we get a token from twitch in api. Look into this.
+
+
+@socketio.on("debug_switch", namespace="/ratmaze/widget")
+def switch():
+    if gameData.live_event.is_set():
+        gameData.end_game()
+    else:
+        gameData.start_game()
+    user_id = sid_map[request.sid]
+    user = get_user(user_id)
+    send_update(user, request.sid)
 
 
 @socketio.on("connect", namespace="/ratmaze/widget")
@@ -60,6 +73,7 @@ def send_update(user, sid):
     data = {
         "user": user.__dict__,
         "game": {
+            "is_live": gameData.live_event.is_set(),
             "directions": {key.to_str(): value for key, value in gameData.directions.items()},
             "next_turn": gameData.next_turn,
             "can_vote": gameData.can_vote(user),

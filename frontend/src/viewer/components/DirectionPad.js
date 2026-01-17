@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DirectionPad.css';
-import image from './assets/rat.png';
+import image from '../../assets/rat.png';
 
 export default function DirectionPad({data, socket}) {
   const handleClick = (direction) => {

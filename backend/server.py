@@ -35,15 +35,17 @@ def temp_mock_game():
 def timer_thread():
     prev_time = 0
     while True:
-        with lock:
-            # Did not hit vote threshold
-            if gameData.next_turn >= prev_time:
-                gameData.end_vote(gameData.Direction.RIGHT)
-            prev_time = gameData.next_turn
-            temp_mock_game()
-            widget.update_all()
-        curr_time = int(time.time())
-        time.sleep(max(gameData.next_turn - curr_time, gameData.turn_len))
+        gameData.live_event.wait()
+        while gameData.live_event.is_set():
+            with lock:
+                # Did not hit vote threshold
+                if gameData.next_turn >= prev_time:
+                    gameData.end_vote(gameData.get_top_direction())
+                prev_time = gameData.next_turn
+                temp_mock_game()
+                widget.update_all()
+            curr_time = int(time.time())
+            time.sleep(max(gameData.next_turn - curr_time, gameData.turn_len))
 
 
 if __name__ == "__main__":
