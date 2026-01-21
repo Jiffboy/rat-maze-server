@@ -1,11 +1,10 @@
 from flask_socketio import SocketIO
 from flask import request
-from twitch import get_user
 from game_data import Direction
 
 
 class SocketHandler:
-    def __init__(self, app, game_data):
+    def __init__(self, app, game_data, user_manager):
         # TODO: Add disconnect! Remove from map
         # TODO: Add encryption for streamer login
         # TODO: Figure out user encryption? Maybe we get a token from twitch in api. Look into this.
@@ -15,13 +14,14 @@ class SocketHandler:
         self.user_sid_map = {}
         self.game_sid = 0
         self.game_data = game_data
+        self.user_manager = user_manager
 
         # WIDGET EVENTS
         @self.socket.on("connect", namespace="/ratmaze/widget")
         def on_connect(auth):
             if request.sid not in self.user_sid_map:
                 self.user_sid_map[request.sid] = auth['id']
-            user = get_user(auth['id'])
+            user = self.user_manager.get_user(auth['id'])
             self.send_update_to_user(user, request.sid)
 
         @self.socket.on("vote", namespace="/ratmaze/widget")
@@ -29,7 +29,7 @@ class SocketHandler:
             user_id = self.user_sid_map[request.sid]
             direction = Direction.from_str(data['direction'])
             if direction is not None:
-                user = get_user(user_id)
+                user = self.user_manager.get_user(user_id)
 
                 if self.game_data.can_vote(user):
                     self.game_data.cast_vote(user, direction)
@@ -45,7 +45,7 @@ class SocketHandler:
             user_id = self.user_sid_map[request.sid]
             item_id = data['item']
 
-            user = get_user(user_id)
+            user = self.user_manager.get_user(user_id)
             item = next((i for i in self.game_data.shop if i.id == item_id), None)
             if item is not None:
                 if user.balance >= item.cost:
@@ -98,7 +98,7 @@ class SocketHandler:
 
     def send_update_to_all_users(self):
         for sid, user_id in self.user_sid_map.items():
-            user = get_user(user_id)
+            user = self.user_manager.get_user(user_id)
             self.send_update_to_user(user, sid)
 
     def send_update_to_user(self, user, sid):

@@ -1,6 +1,5 @@
 import sqlite3
 import os
-from twitch import get_user, get_top_users
 import random
 import time
 import threading
@@ -69,7 +68,8 @@ class Item:
 
 
 class GameData:
-    def __init__(self):
+    def __init__(self, user_manager):
+        self.user_manager = user_manager
         self.directions = {
             Direction.UP: False,
             Direction.RIGHT: False,
@@ -91,6 +91,7 @@ class GameData:
         self.turn_len = 3  # TODO: DB value
         self.shop_size = 5  # TODO: DB value
         self.leaderboard_size = 5  # TODO: DB value
+        self.cheese_points = 20  # TODO: DBvalue
 
         self.item_rarities = {
             Rarity.COMMON: 0.6,
@@ -104,6 +105,7 @@ class GameData:
         cursor = connection.cursor()
         cursor.execute("UPDATE Users SET Balance=0, CurrentPoints=0;")
         connection.commit()
+        self.user_manager.refresh_users()
         self.reset_votes()
         self.reset_shop()
         self.live_event.set()
@@ -154,22 +156,21 @@ class GameData:
             used_items.append(item.name)
 
     def can_vote(self, user):
-        return all(user.id not in lst for lst in self.votes.values()) and self.can_vote_event.is_set()
+        return all(user not in lst for lst in self.votes.values()) and self.can_vote_event.is_set()
 
     def award_points(self, cheese=False):
         is_empty = all(not lst for lst in self.votes.values())
         if not is_empty:
-            for user_id in self.votes[self.winning_vote]:
-                user = get_user(user_id)
-                user.balance += self.inc
-                user.total_points += self.inc
-                user.current_points += self.inc
-                user.update()
+            for user in self.votes[self.winning_vote]:
+                user.award_points(self.inc)
             self.reset_votes()
         if cheese:
             self.cheese_count += 1
+            for user in self.cheese_worthy:
+                user.award_points(self.cheese_points)
+            self.cheese_worthy = []
         # refresh our leaderboard
-        self.leaderboard = get_top_users(self.leaderboard_size)
+        self.leaderboard = self.user_manager.get_top_users(self.leaderboard_size)
 
     def end_vote(self, direction):
         if direction is not None:
@@ -190,7 +191,9 @@ class GameData:
 
     def cast_vote(self, user, direction):
         if self.can_vote(user):
-            self.votes[direction].append(user.id)
+            self.votes[direction].append(user)
+            if user not in self.cheese_worthy:
+                self.cheese_worthy.append(user)
             self.handle_votes()
 
     def get_top_direction(self):

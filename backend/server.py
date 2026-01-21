@@ -2,6 +2,7 @@ from flask import Flask
 from socket_handler import SocketHandler
 import sys
 from game_data import GameData
+from user_manager import UserManager
 import threading
 import time
 
@@ -32,8 +33,9 @@ def timer_thread(game, sock):
 
 
 if __name__ == "__main__":
-    game_data = GameData()
-    socket = SocketHandler(app, game_data)
+    user_manager = UserManager()
+    game_data = GameData(user_manager)
+    socket = SocketHandler(app, game_data, user_manager)
     thread = threading.Thread(target=timer_thread, args=(game_data, socket))
     thread.start()
     socket.run(len(sys.argv) > 1 and sys.argv[1] == "debug")
