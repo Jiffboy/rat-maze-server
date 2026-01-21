@@ -26,13 +26,8 @@ export default function ViewerPanel() {
     }
   }, []);
 
-  const handleDebugClick = (direction) => {
-    socket.current.emit("debug_switch")
-  };
-
   return (
   <div>
-    <button onClick={() => handleDebugClick()}>Switch</button>
     {!data &&
         <div className='loading-container'>
           <div>

@@ -1,58 +1,39 @@
 from flask import Flask
-from socket_def import socketio
-from widget import widget_endpoint
+from socket_handler import SocketHandler
 import sys
-import gameData
+from game_data import GameData
 import threading
-import random
 import time
 
 app = Flask(__name__)
-app.register_blueprint(widget_endpoint)
-
-socketio.init_app(app)
 lock = threading.Lock()
 
-# Must be imported after socketio instantiated. Cursed but whatever
-import widget
 
-
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
-
-
-# THIS IS TEMPORARY MAKE SURE TO REMOVE
-def temp_mock_game():
-    gameData.directions[gameData.Direction.UP] = random.choice([True, False])
-    gameData.directions[gameData.Direction.RIGHT] = random.choice([True, False])
-    gameData.directions[gameData.Direction.DOWN] = random.choice([True, False])
-    gameData.directions[gameData.Direction.LEFT] = random.choice([True, False])
-    # gameData.reset_shop()
-
-
-def timer_thread():
+def timer_thread(game, sock):
     prev_time = 0
     while True:
-        gameData.live_event.wait()
-        while gameData.live_event.is_set():
+        game.live_event.wait()
+        while game.live_event.is_set():
             with lock:
                 # Did not hit vote threshold
-                if gameData.next_turn >= prev_time:
-                    gameData.end_vote(gameData.get_top_direction())
-                prev_time = gameData.next_turn
-                temp_mock_game()
-                widget.update_all()
+                if game.next_turn >= prev_time and game.can_vote_event.is_set():
+                    game.end_vote(game.get_top_direction())
+                    sock.send_update_to_all_users()
+                    game.update_end_time()
+                    # Votes were cast
+                    if not game.can_vote_event.is_set():
+                        sock.send_vote_to_game(game.winning_vote)
+                        game.can_vote_event.wait()
+                    else:
+                        sock.send_update_to_game()
+
             curr_time = int(time.time())
-            time.sleep(max(gameData.next_turn - curr_time, gameData.turn_len))
+            time.sleep(max(game.next_turn - curr_time, game.turn_len))
 
 
 if __name__ == "__main__":
-    gameData.start_game()
-    thread = threading.Thread(target=timer_thread)
+    game_data = GameData()
+    socket = SocketHandler(app, game_data)
+    thread = threading.Thread(target=timer_thread, args=(game_data, socket))
     thread.start()
-    if len(sys.argv) > 1 and sys.argv[1] == "debug":
-        socketio.run(app, debug=True)
-    else:
-        socketio.run(app, debug=False, allow_unsafe_werkzeug=True)
+    socket.run(len(sys.argv) > 1 and sys.argv[1] == "debug")

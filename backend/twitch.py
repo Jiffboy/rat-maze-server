@@ -22,6 +22,20 @@ class User:
         connection.commit()
 
 
+def get_top_users(count, all_time=False):
+    connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+    cursor = connection.cursor()
+    if all_time:
+        cursor.execute("SELECT * FROM Users Where TotalPoints > 0 ORDER BY TotalPoints DESC LIMIT ?", (count,))
+    else:
+        cursor.execute("SELECT * FROM Users Where CurrentPoints > 0 ORDER BY CurrentPoints DESC LIMIT ?", (count,))
+    users = cursor.fetchall()
+    leaderboard = []
+    for user in users:
+        leaderboard.append(User(user[0], user[1], user[2], user[3], user[4]))
+    return leaderboard
+
+
 def get_user(user_id):
     connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
     cursor = connection.cursor()

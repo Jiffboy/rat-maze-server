@@ -4,6 +4,6 @@ import Item from '../components/Item'
 
 export default function OnlinePanel({data, socket}) {
     return (
-      <p> :) </p>
+      <p> Game is currently offline! Page TBD! </p>
     )
 }
