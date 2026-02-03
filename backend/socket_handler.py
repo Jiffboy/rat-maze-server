@@ -90,6 +90,21 @@ class SocketHandler:
             self.game_data.directions[Direction.LEFT] = data['left']
             self.send_update_to_all_users()
 
+        # DEBUG EVENTS
+        @self.socket.on("refresh_shop", namespace="/ratmaze/widget")
+        def debug_refresh_shop():
+            if self.game_data.debug:
+                self.game_data.reset_shop()
+                self.send_update_to_all_users()
+
+        @self.socket.on("give_points", namespace="/ratmaze/widget")
+        def debug_give_points():
+            if self.game_data.debug:
+                user_id = self.user_sid_map[request.sid]
+                user = self.user_manager.get_user(user_id)
+                user.award_points(100)
+                self.send_update_to_user(user, request.sid)
+
     def run(self, debug):
         if debug:
             self.socket.run(self.app, debug=True)
@@ -106,6 +121,7 @@ class SocketHandler:
             "user": user.__dict__,
             "game": {
                 "is_live": self.game_data.live_event.is_set(),
+                "is_debug": self.game_data.debug,
                 "directions": {key.to_str(): value for key, value in self.game_data.directions.items()},
                 "next_turn": self.game_data.next_turn,
                 "can_vote": self.game_data.can_vote(user),
@@ -120,9 +136,20 @@ class SocketHandler:
     def send_item_to_game(self, user, item):
         data = {
             "user": user.username,
-            "item": item.name,
-            "config": {}
+            "id": item.id,
+            "name": item.name,
+            "config": item.config
         }
+        if item.id == "random":
+            rand_item = self.game_data.get_random_item()
+            config = {
+                "id": rand_item.id,
+                "name": rand_item.name,
+                "config": rand_item.config
+            }
+            data["config"] = config
+        else:
+            data["config"] = item.config
         self.socket.emit("use_item", data, to=self.game_sid, namespace="/ratmaze/game")
 
     def send_update_to_game(self):

@@ -55,6 +55,12 @@ class Item:
         self.rarity = Rarity(item[6])
         self.family = item[7]
 
+        connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM ItemConfigs WHERE ItemId = ?", (item[0],))
+        config = {c[1]: c[2] for c in cursor.fetchall()}
+        self.config = config
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -68,8 +74,9 @@ class Item:
 
 
 class GameData:
-    def __init__(self, user_manager):
+    def __init__(self, user_manager, debug=False):
         self.user_manager = user_manager
+        self.debug = debug
         self.directions = {
             Direction.UP: False,
             Direction.RIGHT: False,
@@ -154,6 +161,14 @@ class GameData:
             if item.family is not None:
                 used_families.append(item.family)
             used_items.append(item.name)
+
+    def get_random_item(self):
+        connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM Items WHERE NOT RandomExcluded")
+        items = cursor.fetchall()
+        item = random.choice(items)
+        return Item(item)
 
     def can_vote(self, user):
         return all(user not in lst for lst in self.votes.values()) and self.can_vote_event.is_set()

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import DirectionPad from '../components/DirectionPad'
 import Item from '../components/Item'
+import DebugBar from '../components/DebugBar'
 
 export default function OnlinePanel({data, socket}) {
   const [nextTurn, setNextTurn] = useState(0)
@@ -43,6 +44,7 @@ export default function OnlinePanel({data, socket}) {
 
   return (
     <div>
+      {data.game.is_debug && <DebugBar socket={socket}/>}
       <div className="point-bar">
         <p><strong>Points:</strong> {data.user.current_points}</p>
         <p><strong>{timer}</strong></p>

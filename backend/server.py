@@ -5,6 +5,7 @@ from game_data import GameData
 from user_manager import UserManager
 import threading
 import time
+import argparse
 
 app = Flask(__name__)
 lock = threading.Lock()
@@ -33,8 +34,12 @@ def timer_thread(game, sock):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+
     user_manager = UserManager()
-    game_data = GameData(user_manager)
+    game_data = GameData(user_manager, args.debug)
     socket = SocketHandler(app, game_data, user_manager)
     thread = threading.Thread(target=timer_thread, args=(game_data, socket))
     thread.start()
