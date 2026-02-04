@@ -182,7 +182,7 @@ class GameData:
         if cheese:
             self.cheese_count += 1
             for user in self.cheese_worthy:
-                user.award_points(self.cheese_points)
+                user.award_points(self.cheese_points, award_cheese=True)
             self.cheese_worthy = []
         # refresh our leaderboard
         self.leaderboard = self.user_manager.get_top_users(self.leaderboard_size)

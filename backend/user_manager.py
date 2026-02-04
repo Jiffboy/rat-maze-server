@@ -6,19 +6,20 @@ import requests
 
 
 class User:
-    def __init__(self, id, username, balance, total_points, current_points):
+    def __init__(self, id, username, balance, total_points, current_points, total_cheese):
         self.id = id
         self.username = username
         self.balance = balance
         self.current_points = current_points
         self.total_points = total_points
+        self.total_cheese = total_cheese
 
     def update(self):
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
         cursor = connection.cursor()
 
-        cursor.execute(f"UPDATE Users SET Username = ?, Balance = ?, TotalPoints = ?, CurrentPoints = ? WHERE Id = ?",
-                       (self.username, self.balance, self.total_points, self.current_points, self.id))
+        cursor.execute(f"UPDATE Users SET Username = ?, Balance = ?, TotalPoints = ?, CurrentPoints = ?, TotalCheese = ? WHERE Id = ?",
+                       (self.username, self.balance, self.total_points, self.current_points, self.total_cheese, self.id))
         connection.commit()
 
     def refresh(self):
@@ -31,10 +32,12 @@ class User:
         self.total_points = user[1]
         self.current_points = user[2]
 
-    def award_points(self, points):
+    def award_points(self, points, award_cheese=False):
         self.balance += points
         self.total_points += points
         self.current_points += points
+        if award_cheese:
+            self.total_cheese += 1
         self.update()
 
 
@@ -71,7 +74,7 @@ class UserManager:
         cursor.execute("SELECT * FROM Users WHERE Id = ?", (user_id,))
         user = cursor.fetchone()
         if len(user) > 0:
-            user = User(user[0], user[1], user[2], user[3], user[4])
+            user = User(user[0], user[1], user[2], user[3], user[4], user[5])
             self.id_map[user_id] = user
             return user
 

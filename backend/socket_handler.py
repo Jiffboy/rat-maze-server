@@ -28,17 +28,7 @@ class SocketHandler:
         def vote(data):
             user_id = self.user_sid_map[request.sid]
             direction = Direction.from_str(data['direction'])
-            if direction is not None:
-                user = self.user_manager.get_user(user_id)
-
-                if self.game_data.can_vote(user):
-                    self.game_data.cast_vote(user, direction)
-                    if not self.game_data.can_vote_event.is_set():
-                        self.send_update_to_all_users()
-                        self.send_vote_to_game(direction)
-                    else:
-                        self.send_update_to_user(user, request.sid)
-                        self.send_update_to_game()
+            self.cast_vote(user_id, direction)
 
         @self.socket.on("buy", namespace="/ratmaze/widget")
         def buy(data):
@@ -90,6 +80,11 @@ class SocketHandler:
             self.game_data.directions[Direction.LEFT] = data['left']
             self.send_update_to_all_users()
 
+        @self.socket.on("complete_reset", namespace="/ratmaze/game")
+        def complete_reset():
+            self.game_data.start_game()
+            self.update_everything()
+
         # DEBUG EVENTS
         @self.socket.on("refresh_shop", namespace="/ratmaze/widget")
         def debug_refresh_shop():
@@ -104,6 +99,11 @@ class SocketHandler:
                 user = self.user_manager.get_user(user_id)
                 user.award_points(100)
                 self.send_update_to_user(user, request.sid)
+
+        @self.socket.on("vote_as", namespace="/ratmaze/widget")
+        def vote_as(data):
+            if self.game_data.debug:
+                self.cast_vote(data['id'], Direction.from_str(data['direction']), True)
 
     def run(self, debug):
         if debug:
@@ -167,3 +167,17 @@ class SocketHandler:
     def update_everything(self):
         self.send_update_to_all_users()
         self.send_update_to_game()
+
+    def cast_vote(self, user_id, direction, debug=False):
+        if direction is not None:
+            user = self.user_manager.get_user(user_id)
+
+            if self.game_data.can_vote(user):
+                self.game_data.cast_vote(user, direction)
+                if not self.game_data.can_vote_event.is_set():
+                    self.send_update_to_all_users()
+                    self.send_vote_to_game(direction)
+                else:
+                    if not debug:
+                        self.send_update_to_user(user, request.sid)
+                    self.send_update_to_game()
