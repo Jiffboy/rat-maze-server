@@ -8,7 +8,7 @@ class SocketHandler:
         # TODO: Add disconnect! Remove from map
         # TODO: Add encryption for streamer login
         # TODO: Figure out user encryption? Maybe we get a token from twitch in api. Look into this.
-        self.socket = SocketIO(app, cors_allowed_origins="*")
+        self.socket = SocketIO(app, cors_allowed_origins="https://*.ext-twitch.tv")
         self.app = app
         self.user_sid_map = {}
         self.game_sid = 0
