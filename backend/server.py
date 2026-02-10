@@ -11,12 +11,6 @@ app = Flask(__name__)
 lock = threading.Lock()
 
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
-
-
 def timer_thread(game, sock):
     prev_time = 0
     while True:
