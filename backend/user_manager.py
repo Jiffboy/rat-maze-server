@@ -65,7 +65,11 @@ class UserManager:
 
     def get_user(self, user_id):
         # Sometimes it's a string, sometimes it's not
-        user_id = int(user_id)
+        try:
+            user_id = int(user_id)
+        except Exception as e:
+            print(f"Failed to parse id: {user_id}")
+            return None
         if user_id in self.id_map:
             return self.id_map[user_id]
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))

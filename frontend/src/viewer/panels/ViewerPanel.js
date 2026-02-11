@@ -5,7 +5,6 @@ import loadingImg from '../../assets/loading.gif';
 import { io } from 'socket.io-client'
 
 export default function ViewerPanel() {
-  console.log("Here!")
   const [data, setData] = useState(null)
   const socket = useRef(null)
 
@@ -21,7 +20,6 @@ export default function ViewerPanel() {
 
           socket.current.on("data_update", (payload) => {
             setData(payload)
-            console.log(payload)
           })
         }
       });

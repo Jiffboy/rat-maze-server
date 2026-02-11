@@ -21,7 +21,8 @@ class SocketHandler:
             if request.sid not in self.user_sid_map:
                 self.user_sid_map[request.sid] = auth['id']
             user = self.user_manager.get_user(auth['id'])
-            self.send_update_to_user(user, request.sid)
+            if user is not None:
+                self.send_update_to_user(user, request.sid)
 
         @self.socket.on("vote", namespace="/ratmaze/widget")
         def vote(data):
