@@ -1,11 +1,11 @@
 from flask import Flask
 from socket_handler import SocketHandler
-import sys
 from game_data import GameData
 from user_manager import UserManager
 import threading
 import time
 import argparse
+import os
 
 app = Flask(__name__)
 lock = threading.Lock()
@@ -33,14 +33,21 @@ def timer_thread(game, sock):
             time.sleep(max(game.next_turn - curr_time, game.turn_len))
 
 
+debug_mode = os.getenv('DEBUG', 'false').lower() == 'true'
+user_manager = UserManager()
+game_data = GameData(user_manager, debug_mode)
+socket_handler = SocketHandler(app, game_data, user_manager)
+socketio = socket_handler.socket
+
+thread = threading.Thread(target=timer_thread, args=(game_data, socket_handler), daemon=True)
+thread.start()
+
 if __name__ == "__main__":
+    print(os.getenv('RATMAZE_DB'))
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
+    if args.debug:
+        game_data.debug = True
 
-    user_manager = UserManager()
-    game_data = GameData(user_manager, args.debug)
-    socket = SocketHandler(app, game_data, user_manager)
-    thread = threading.Thread(target=timer_thread, args=(game_data, socket))
-    thread.start()
-    socket.run(len(sys.argv) > 1 and sys.argv[1] == "debug")
+    socket_handler.run(args.debug)

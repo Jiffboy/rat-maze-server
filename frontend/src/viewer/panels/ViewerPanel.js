@@ -13,7 +13,9 @@ export default function ViewerPanel() {
     if (window.Twitch && window.Twitch.ext) {
       window.Twitch.ext.onAuthorized((auth) => {
         if (auth?.userId) {
-          socket.current = io( "/ratmaze/widget", {
+          socket.current = io("https://jifbot.com/ratmaze/widget", {
+            path: "/socket.io",
+            transports: ["websocket", "polling"],
             auth: { id: auth.userId.slice(1) }
           });
 
