@@ -1,6 +1,8 @@
 import sqlite3
 import os
 import time
+import random
+from adjectives import adjectives
 
 import requests
 
@@ -64,12 +66,6 @@ class UserManager:
         return leaderboard
 
     def get_user(self, user_id):
-        # Sometimes it's a string, sometimes it's not
-        try:
-            user_id = int(user_id)
-        except Exception as e:
-            print(f"Failed to parse id: {user_id}")
-            return None
         if user_id in self.id_map:
             return self.id_map[user_id]
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
@@ -77,11 +73,16 @@ class UserManager:
 
         cursor.execute("SELECT * FROM Users WHERE Id = ?", (user_id,))
         user = cursor.fetchone()
-        if len(user) > 0:
+        if user is not None and len(user) > 0:
             user = User(user[0], user[1], user[2], user[3], user[4], user[5])
             self.id_map[user_id] = user
             return user
 
+        # Not in our records, let them be anonymous for now.
+        name = f"{random.choice(adjectives)} Rat"
+        cursor.execute("INSERT INTO Users (Id, Username) VALUES(?, ?)", (user_id, name))
+        connection.commit()
+        '''
         self.verify_token(connection)
 
         cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientId'")
@@ -102,7 +103,7 @@ class UserManager:
         json = response.json()
         data = json["data"][0]
         cursor.execute("INSERT INTO Users (Id, Username) VALUES(?, ?)", (data["id"], data["display_name"]))
-        connection.commit()
+        connection.commit()'''
         return self.get_user(user_id)
 
     def verify_token(self, connection):

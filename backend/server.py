@@ -33,21 +33,27 @@ def timer_thread(game, sock):
             time.sleep(max(game.next_turn - curr_time, game.turn_len))
 
 
-debug_mode = os.getenv('DEBUG', 'false').lower() == 'true'
+dev = False
+debug = False
+
+# Only happens when we call from commandline
+if __name__ == "__main__":
+    dev = True
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+    if args.debug:
+        debug = True
+
+
 user_manager = UserManager()
-game_data = GameData(user_manager, debug_mode)
-socket_handler = SocketHandler(app, game_data, user_manager)
+game_data = GameData(user_manager, debug)
+game_data.debug = debug
+socket_handler = SocketHandler(app, game_data, user_manager, dev)
 socketio = socket_handler.socket
 
 thread = threading.Thread(target=timer_thread, args=(game_data, socket_handler), daemon=True)
 thread.start()
 
 if __name__ == "__main__":
-    print(os.getenv('RATMAZE_DB'))
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    args = parser.parse_args()
-    if args.debug:
-        game_data.debug = True
-
-    socket_handler.run(args.debug)
+    socket_handler.run(debug)

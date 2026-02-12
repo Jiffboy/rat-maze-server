@@ -4,11 +4,15 @@ from game_data import Direction
 
 
 class SocketHandler:
-    def __init__(self, app, game_data, user_manager):
+    def __init__(self, app, game_data, user_manager, is_dev):
         # TODO: Add disconnect! Remove from map
         # TODO: Add encryption for streamer login
         # TODO: Figure out user encryption? Maybe we get a token from twitch in api. Look into this.
-        self.socket = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+        if is_dev:
+            self.socket = SocketIO(cors_allowed_origins="*")
+            self.socket.init_app(app)
+        else:
+            self.socket = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
         self.app = app
         self.user_sid_map = {}
         self.game_sid = 0
@@ -107,7 +111,7 @@ class SocketHandler:
 
     def run(self, debug):
         if debug:
-            self.socket.run(self.app, debug=True)
+            self.socket.run(self.app, debug=True, use_reloader=False)
         else:
             self.socket.run(self.app, debug=False, allow_unsafe_werkzeug=True)
 

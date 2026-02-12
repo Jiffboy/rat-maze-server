@@ -15,7 +15,7 @@ export default function ViewerPanel() {
           socket.current = io("https://jifbot.com/ratmaze/widget", {
             path: "/socket.io",
             transports: ["websocket", "polling"],
-            auth: { id: auth.userId.slice(1) }
+            auth: { id: auth.userId }
           });
 
           socket.current.on("data_update", (payload) => {
