@@ -116,6 +116,7 @@ class GameData:
         self.reset_votes()
         self.reset_shop()
         self.live_event.set()
+        self.cheese_count = 0
 
     def end_game(self):
         self.reset_votes()
