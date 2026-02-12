@@ -99,7 +99,9 @@ class GameData:
         self.shop_size = 5  # TODO: DB value
         self.leaderboard_size = 5  # TODO: DB value
         self.cheese_points = 20  # TODO: DBvalue
+        self.offline_leaderboard_size = 10
 
+        self.offline_leaderboard = self.user_manager.get_top_users(self.offline_leaderboard_size, True)
         self.item_rarities = {
             Rarity.COMMON: 0.6,
             Rarity.UNCOMMON: 0.25,
@@ -124,6 +126,7 @@ class GameData:
         self.next_turn = 0
         self.live_event.clear()
         self.can_vote_event.clear()
+        self.offline_leaderboard = self.user_manager.get_top_users(self.offline_leaderboard_size, True)
 
     def reset_votes(self):
         self.votes[Direction.UP] = []

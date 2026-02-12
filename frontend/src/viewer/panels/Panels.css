@@ -1,0 +1,13 @@
+.leaderboard-container {
+  margin: 0 auto;
+  width: 80%;
+}
+
+.offline-container {
+  padding-top: 10px;
+}
+
+hr {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}

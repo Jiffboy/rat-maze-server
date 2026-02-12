@@ -1,0 +1,16 @@
+.user-container {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.user-points {
+  text-align: right;
+  font-size: 14px;
+  margin-top: 0px;
+}
+
+.user-name {
+  text-align: left;
+  font-size: 14px;
+  margin-top: 0px;
+}

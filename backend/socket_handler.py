@@ -132,6 +132,11 @@ class SocketHandler:
                 "shop": list([item.to_dict() for item in self.game_data.shop])
             }
         }
+        if not self.game_data.live_event.is_set():
+            data["leaderboard"] = [
+                {"username": user.username, "points": user.total_points}
+                for user in self.game_data.offline_leaderboard
+            ]
         self.socket.emit("data_update", data, to=sid, namespace="/ratmaze/widget")
 
     def send_vote_to_game(self, direction):
