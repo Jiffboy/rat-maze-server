@@ -5,50 +5,88 @@
 
 .item-button {
   width: 100%;
-  border: 1px solid transparent;
+  border: none;
+  border-left: 4px solid transparent;
   border-radius: 6px;
   display: flex;
   align-items: center;
-  padding: 0px;
+  padding: 4px;
+  background-color: #1a1a1a;
   transition: transform 0.2s, filter 0.2s, background-color 0.2s;
   cursor: pointer;
 }
 
-.item-button:not(:disabled):hover {
-  transform: scale(1.03);
-  filter: brightness(1.1);
-}
-
 .item-button:not(:disabled):active {
   transform: scale(0.97);
-  filter: brightness(0.95);
 }
 
 .item-button.rarity-common {
-  background-color: #707070;
-  border-color: #707070;
+  border-left-color: #707070;
+}
+
+.item-button.rarity-common:not(:disabled) {
+  background-color: #2a2a2a;
 }
 
 .item-button.rarity-uncommon {
-  background-color: #1A8A00;
-  border-color: #1A8A00;
+  border-left-color: #1A8A00;
+}
+
+.item-button.rarity-uncommon:not(:disabled) {
+  background-color: #0d3500;
 }
 
 .item-button.rarity-rare {
-  background-color: #004080;
-  border-color: #004080;
+  border-left-color: #004080;
+}
+
+.item-button.rarity-rare:not(:disabled) {
+  background-color: #001a33;
 }
 
 .item-button.rarity-legendary {
-  background-color: #CC6600;
-  border-color: #CC6600;
+  border-left-color: #CC6600;
+}
+
+.item-button.rarity-legendary:not(:disabled) {
+  background-color: #4d2600;
 }
 
 .item-button:disabled {
-  background-color: #1a1a1a;
   cursor: default;
-  transform: none;
-  filter: brightness(1);
+  opacity: 0.5;
+}
+
+.item-button.rarity-common:disabled {
+  background-color: #1a1a1a;
+}
+
+.item-button.rarity-uncommon:disabled {
+  background-color: #0a2200;
+}
+
+.item-button.rarity-rare:disabled {
+  background-color: #001020;
+}
+
+.item-button.rarity-legendary:disabled {
+  background-color: #331a00;
+}
+
+.item-button.rarity-common:not(:disabled):hover {
+  background-color: #70707099;
+}
+
+.item-button.rarity-uncommon:not(:disabled):hover {
+  background-color: #1A8A0099;
+}
+
+.item-button.rarity-rare:not(:disabled):hover {
+  background-color: #00408099;
+}
+
+.item-button.rarity-legendary:not(:disabled):hover {
+  background-color: #CC660099;
 }
 
 p {

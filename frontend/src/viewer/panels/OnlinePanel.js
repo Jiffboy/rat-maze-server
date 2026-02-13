@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import DirectionPad from '../components/DirectionPad'
 import Item from '../components/Item'
 import DebugBar from '../components/DebugBar'
+import './Panels.css'
 
 export default function OnlinePanel({data, socket}) {
   const [nextTurn, setNextTurn] = useState(0)
@@ -46,16 +47,24 @@ export default function OnlinePanel({data, socket}) {
     <div>
       {data.game.is_debug && <DebugBar socket={socket}/>}
       <div className="point-bar">
-        <p><strong>Points:</strong> {data.user.current_points}</p>
-        <p><strong>{timer}</strong></p>
-        <p><strong>Total:</strong> {data.user.total_points}</p>
+        <div className="stat-item">
+          <span className="stat-label">Current Points:</span>
+          <span className="stat-value">{data.user.current_points}</span>
+        </div>
+        <p className="timer-display"><strong>{timer}</strong></p>
+        <div className="stat-item">
+          <span className="stat-label">Points All-Time:</span>
+          <span className="stat-value">{data.user.total_points}</span>
+        </div>
       </div>
       <DirectionPad
         data={data}
         socket={socket}
       />
-      <hr/>
-      <p><strong>Balance:</strong> {data.user.balance}</p>
+      <div className="balance-container">
+        <span className="stat-label">Balance:</span>
+        <span className="stat-value">{data.user.balance}</span>
+      </div>
 
       {data.game.shop.map((item, index) => (
         <Item data={item} balance={data.user.balance} socket={socket}/>
