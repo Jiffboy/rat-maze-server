@@ -109,11 +109,8 @@ class SocketHandler:
             if self.game_data.debug:
                 self.cast_vote(data['id'], Direction.from_str(data['direction']), True)
 
-    def run(self, debug):
-        if debug:
-            self.socket.run(self.app, debug=True, use_reloader=False)
-        else:
-            self.socket.run(self.app, debug=False, allow_unsafe_werkzeug=True)
+    def run(self):
+        self.socket.run(self.app, debug=True, use_reloader=False)
 
     def send_update_to_all_users(self):
         for sid, user_id in self.user_sid_map.items():

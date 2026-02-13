@@ -1,10 +1,59 @@
-.leaderboard-container {
-  margin: 0 auto;
-  width: 80%;
+.offline-container {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.offline-container {
-  padding-top: 10px;
+/* Offline Header */
+.offline-header {
+  text-align: center;
+}
+
+.offline-status {
+  font-size: 16px;
+  font-weight: bold;
+  color: #CC0000;
+  margin: 0;
+}
+
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+
+  width: 70%;
+  margin: 0 auto;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #adadb8;
+  padding: 4px 0;
+}
+
+.stat-row strong {
+  color: white;
+}
+
+/* Leaderboard Section */
+.leaderboard-section {
+  flex: 1;
+}
+
+.leaderboard-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  margin: 0 0 10px 0;
+  text-align: center;
+}
+
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 hr {

@@ -1,14 +1,13 @@
+import eventlet
+eventlet.monkey_patch()
 from flask import Flask
 from socket_handler import SocketHandler
 from game_data import GameData
 from user_manager import UserManager
-import threading
 import time
 import argparse
-import os
 
 app = Flask(__name__)
-lock = threading.Lock()
 
 
 def timer_thread(game, sock):
@@ -16,21 +15,20 @@ def timer_thread(game, sock):
     while True:
         game.live_event.wait()
         while game.live_event.is_set():
-            with lock:
-                # Did not hit vote threshold
-                if game.next_turn >= prev_time and game.can_vote_event.is_set():
-                    game.end_vote(game.get_top_direction())
-                    sock.send_update_to_all_users()
-                    game.update_end_time()
-                    # Votes were cast
-                    if not game.can_vote_event.is_set():
-                        sock.send_vote_to_game(game.winning_vote)
-                        game.can_vote_event.wait()
-                    else:
-                        sock.send_update_to_game()
+            # Did not hit vote threshold
+            if game.next_turn >= prev_time and game.can_vote_event.is_set():
+                game.end_vote(game.get_top_direction())
+                sock.send_update_to_all_users()
+                game.update_end_time()
+                # Votes were cast
+                if not game.can_vote_event.is_set():
+                    sock.send_vote_to_game(game.winning_vote)
+                    game.can_vote_event.wait()
+                else:
+                    sock.send_update_to_game()
 
             curr_time = int(time.time())
-            time.sleep(max(game.next_turn - curr_time, game.turn_len))
+            socketio.sleep(max(game.next_turn - curr_time, game.turn_len))
 
 
 dev = False
@@ -48,12 +46,8 @@ if __name__ == "__main__":
 
 user_manager = UserManager()
 game_data = GameData(user_manager, debug)
-game_data.debug = debug
 socket_handler = SocketHandler(app, game_data, user_manager, dev)
 socketio = socket_handler.socket
-
-thread = threading.Thread(target=timer_thread, args=(game_data, socket_handler), daemon=True)
-thread.start()
-
+socketio.start_background_task(target=timer_thread, game=game_data, sock=socket_handler)
 if __name__ == "__main__":
-    socket_handler.run(debug)
+    socket_handler.run()

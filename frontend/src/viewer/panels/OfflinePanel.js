@@ -7,19 +7,31 @@ import './Panels.css';
 export default function OnlinePanel({data, socket}) {
     return (
       <div className="offline-container">
-        <p>Game is currently offline!</p>
-        <p>Come back later!</p>
-        <hr/>
-        <p>{data.user.username}</p>
-        <p><strong>Points Last Session:</strong> {data.user.current_points}</p>
-        <p><strong>Total Points All-Time:</strong> {data.user.total_points}</p>
-        <p><strong>Total Cheeses All-Time:</strong> {data.user.total_cheese}</p>
-        <hr/>
-        <p><strong>Leaderboard:</strong></p>
-        <div className="leaderboard-container">
-          {data.leaderboard.map((user, index) => (
-            <User user={user}/>
-          ))}
+        <p className="offline-status">OFFLINE</p>
+        <div className="user-stats">
+          <div className="stats-grid">
+            <div className="stat-row">
+              <span>Last Session:</span>
+              <strong>{data.user.current_points}</strong>
+            </div>
+            <div className="stat-row">
+              <span>Total Points:</span>
+              <strong>{data.user.total_points}</strong>
+            </div>
+            <div className="stat-row">
+              <span>Total Cheese:</span>
+              <strong>{data.user.total_cheese}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="leaderboard-section">
+          <p className="leaderboard-title">🏆 Leaderboard</p>
+          <div className="leaderboard-container">
+            {data.leaderboard.map((user, index) => (
+              <User key={user.username} user={user} rank={index + 1}/>
+            ))}
+          </div>
         </div>
       </div>
     )
