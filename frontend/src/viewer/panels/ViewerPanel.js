@@ -15,7 +15,7 @@ export default function ViewerPanel() {
           socket.current = io(process.env.REACT_APP_API_URL + "/ratmaze/widget", {
             path: "/socket.io",
             transports: ["websocket", "polling"],
-            auth: { id: auth.userId }
+            auth: { id: auth.userId, token: auth.token }
           });
 
           socket.current.on("data_update", (payload) => {

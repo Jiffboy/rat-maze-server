@@ -2,14 +2,17 @@ import sqlite3
 import os
 import time
 import random
+import base64
+import jwt
 from adjectives import adjectives
 
 import requests
 
 
 class User:
-    def __init__(self, id, username, balance, total_points, current_points, total_cheese):
+    def __init__(self, id, twitch_id, username, balance, total_points, current_points, total_cheese):
         self.id = id
+        self.twitch_id = twitch_id
         self.username = username
         self.balance = balance
         self.current_points = current_points
@@ -20,8 +23,8 @@ class User:
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
         cursor = connection.cursor()
 
-        cursor.execute(f"UPDATE Users SET Username = ?, Balance = ?, TotalPoints = ?, CurrentPoints = ?, TotalCheese = ? WHERE Id = ?",
-                       (self.username, self.balance, self.total_points, self.current_points, self.total_cheese, self.id))
+        cursor.execute(f"UPDATE Users SET TwitchId = ?, Username = ?, Balance = ?, TotalPoints = ?, CurrentPoints = ?, TotalCheese = ? WHERE Id = ?",
+                       (self.twitch_id, self.username, self.balance, self.total_points, self.current_points, self.total_cheese, self.id))
         connection.commit()
 
     def refresh(self):
@@ -47,6 +50,20 @@ class UserManager:
     def __init__(self):
         # Keep these in a map so that we only have one object per user, and we only have to query SQL once
         self.id_map = {}
+
+        connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientId'")
+        self.client_id = cursor.fetchone()[0]
+        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientSecret'")
+        self.client_secret = cursor.fetchone()[0]
+        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchAccessToken'")
+        self.access_token = cursor.fetchone()[0]
+        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchAccessExpiration'")
+        self.expiration = cursor.fetchone()[0]
+        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchExtensionSecret'")
+        self.extension_secret = cursor.fetchone()[0]
 
     def refresh_users(self):
         for user_id, user in self.id_map.items():
@@ -74,63 +91,79 @@ class UserManager:
         cursor.execute("SELECT * FROM Users WHERE Id = ?", (user_id,))
         user = cursor.fetchone()
         if user is not None and len(user) > 0:
-            user = User(user[0], user[1], user[2], user[3], user[4], user[5])
+            user = User(user[0], user[1], user[2], user[3], user[4], user[5], user[6])
             self.id_map[user_id] = user
             return user
+        return None
 
-        # Not in our records, let them be anonymous for now.
-        name = f"{random.choice(adjectives)} Rat"
-        cursor.execute("INSERT INTO Users (Id, Username) VALUES(?, ?)", (user_id, name))
-        connection.commit()
-        '''
-        self.verify_token(connection)
+    def get_user_from_jwt(self, token):
+        connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+        cursor = connection.cursor()
+        decoded_secret = base64.b64decode(self.extension_secret)
+        try:
+            decoded = jwt.decode(token, decoded_secret, algorithms=["HS256"])
+            user_id = decoded['opaque_user_id']
+            user = self.get_user(user_id)
 
-        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientId'")
-        client_id = cursor.fetchone()[0]
-        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchAccessToken'")
-        access_token = cursor.fetchone()[0]
+            if user is None:
+                if 'user_id' in decoded:
+                    twitch_id = decoded['user_id']
+                    name = self.get_twitch_username(twitch_id)
+                    cursor.execute("INSERT INTO Users (Id, TwitchId, Username) VALUES(?, ?, ?)", (user_id, twitch_id, name))
+                else:
+                    # We do not have access to their username, so we give them an anonymous alias
+                    name = self.get_random_name()
+                    cursor.execute("INSERT INTO Users (Id, Username) VALUES(?, ?)", (user_id, name))
+                connection.commit()
+                return self.get_user(user_id)
 
+            else:
+                # If someone was previously anonymous, we can update them to use their name
+                if 'user_id' in decoded and user.twitch_id == 0:
+                    user.twitch_id = decoded['user_id']
+                    user.username = self.get_twitch_username(user.twitch_id)
+                    user.update()
+                return user
+
+        except jwt.InvalidTokenError:
+            return None
+
+    def get_twitch_username(self, user_id):
+        self.verify_token()
         url = "https://api.twitch.tv/helix/users"
         headers = {
-            "Client-Id": client_id,
-            "Authorization": f"Bearer {access_token}",
+            "Client-Id": self.client_id,
+            "Authorization": f"Bearer {self.access_token}",
         }
         params = {
-            "id": user_id
+            "id": str(user_id)
         }
 
         response = requests.get(url, headers=headers, params=params)
         json = response.json()
         data = json["data"][0]
-        cursor.execute("INSERT INTO Users (Id, Username) VALUES(?, ?)", (data["id"], data["display_name"]))
-        connection.commit()'''
-        return self.get_user(user_id)
+        return data["display_name"]
 
-    def verify_token(self, connection):
-        cursor = connection.cursor()
+    def verify_token(self):
         curr_time = time.time()
 
-        cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchAccessExpiration'")
-        expiration = cursor.fetchone()
-
-        if int(curr_time) > int(expiration[0]):
-            print("Updating token!")
-            cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientId'")
-            client_id = cursor.fetchone()
-            cursor.execute("SELECT Value FROM Constants WHERE Name = 'TwitchClientSecret'")
-            client_secret = cursor.fetchone()
-
+        if int(curr_time) > int(self.expiration):
             url = "https://id.twitch.tv/oauth2/token"
             data = {
-                "client_id": client_id,
-                "client_secret": client_secret,
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
                 "grant_type": "client_credentials"
             }
             response = requests.post(url, data=data)
             json = response.json()
-            access_token = json["access_token"]
-            expiration = int(curr_time) + int(json["expires_in"])
+            self.access_token = json["access_token"]
+            self.expiration = int(curr_time) + int(json["expires_in"])
 
-            cursor.execute("UPDATE Constants SET Value = '?' WHERE Name = 'TwitchAccessToken'", (access_token,))
-            cursor.execute("UPDATE Constants SET Value = '?' WHERE Name = 'TwitchAccessExpiration'", (expiration,))
+            connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
+            cursor = connection.cursor()
+            cursor.execute("UPDATE Constants SET Value = ? WHERE Name = 'TwitchAccessToken'", (self.access_token,))
+            cursor.execute("UPDATE Constants SET Value = ? WHERE Name = 'TwitchAccessExpiration'", (self.expiration,))
             connection.commit()
+
+    def get_random_name(self):
+        return f"{random.choice(adjectives)} Rat"

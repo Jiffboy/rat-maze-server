@@ -22,6 +22,7 @@ class SocketHandler:
         # WIDGET EVENTS
         @self.socket.on("connect", namespace="/ratmaze/widget")
         def on_connect(auth):
+            self.user_manager.get_user_from_jwt(auth['token'])
             if request.sid not in self.user_sid_map:
                 self.user_sid_map[request.sid] = auth['id']
             user = self.user_manager.get_user(auth['id'])
