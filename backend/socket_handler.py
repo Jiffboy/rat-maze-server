@@ -25,6 +25,8 @@ class SocketHandler:
                 if request.sid not in self.user_sid_map:
                     self.user_sid_map[request.sid] = user.id
                 self.send_update_to_user(user, request.sid)
+            else:
+                return False
 
         @self.socket.on("disconnect", namespace="/ratmaze/widget")
         def on_disconnect():
@@ -134,6 +136,7 @@ class SocketHandler:
                 "is_debug": self.game_data.debug,
                 "directions": {key.to_str(): value for key, value in self.game_data.directions.items()},
                 "next_turn": self.game_data.next_turn,
+                "turn_length": self.game_data.turn_len,
                 "can_vote": self.game_data.can_vote(user),
                 "shop": list([item.to_dict() for item in self.game_data.shop])
             }
@@ -170,6 +173,7 @@ class SocketHandler:
     def send_update_to_game(self):
         data = {
             "next_turn": self.game_data.next_turn,
+            "turn_length": self.game_data.turn_len,
             "votes": {key.to_str(): len(value) for key, value in self.game_data.votes.items()},
             "leaderboard": [
                 {"username": user.username, "points": user.current_points}

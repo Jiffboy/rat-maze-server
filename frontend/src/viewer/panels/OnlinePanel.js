@@ -5,7 +5,6 @@ import DebugBar from '../components/DebugBar'
 import './Panels.css'
 
 export default function OnlinePanel({data, socket}) {
-  const [nextTurn, setNextTurn] = useState(0)
   const [timer, setTimer] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
   const interval = useRef(null)
@@ -21,10 +20,14 @@ export default function OnlinePanel({data, socket}) {
       return
     }
 
+    // Sometimes there is drift compared to local systems, so we make sure it does not exceed
+    // the length of the turn.
+    const nextTurn = Math.min(data.game.next_turn, (Date.now() / 1000) + data.game.turn_length)
+
     const update = () => {
       const now = Date.now() / 1000
-      const diff = Math.ceil(data.game.next_turn - now)
-
+      const diff = Math.ceil(nextTurn - now)
+      console.log(nextTurn)
       if (diff <= 0) {
         setTimer(0)
         clearInterval(interval.current)
