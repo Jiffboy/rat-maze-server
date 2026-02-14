@@ -5,9 +5,7 @@ from game_data import Direction
 
 class SocketHandler:
     def __init__(self, app, game_data, user_manager, is_dev):
-        # TODO: Add disconnect! Remove from map
         # TODO: Add encryption for streamer login
-        # TODO: Figure out user encryption? Maybe we get a token from twitch in api. Look into this.
         if is_dev:
             self.socket = SocketIO(cors_allowed_origins="*")
             self.socket.init_app(app)
@@ -22,12 +20,15 @@ class SocketHandler:
         # WIDGET EVENTS
         @self.socket.on("connect", namespace="/ratmaze/widget")
         def on_connect(auth):
-            self.user_manager.get_user_from_jwt(auth['token'])
-            if request.sid not in self.user_sid_map:
-                self.user_sid_map[request.sid] = auth['id']
-            user = self.user_manager.get_user(auth['id'])
+            user = self.user_manager.get_user_from_jwt(auth['token'])
             if user is not None:
+                if request.sid not in self.user_sid_map:
+                    self.user_sid_map[request.sid] = user.id
                 self.send_update_to_user(user, request.sid)
+
+        @self.socket.on("disconnect", namespace="/ratmaze/widget")
+        def on_disconnect():
+            self.user_sid_map.pop(request.sid)
 
         @self.socket.on("vote", namespace="/ratmaze/widget")
         def vote(data):
@@ -120,7 +121,14 @@ class SocketHandler:
 
     def send_update_to_user(self, user, sid):
         data = {
-            "user": user.__dict__,
+            "user": {
+                "username": user.username,
+                "balance": user.balance,
+                "current_points": user.current_points,
+                "total_points": user.total_points,
+                "total_cheese": user.total_cheese,
+                "permission_granted": user.twitch_id != 0
+            },
             "game": {
                 "is_live": self.game_data.live_event.is_set(),
                 "is_debug": self.game_data.debug,

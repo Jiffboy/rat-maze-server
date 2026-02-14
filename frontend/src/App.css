@@ -58,13 +58,22 @@ hr {
 
 .loading-container {
   display: flex;
-  align-items: center;  /* centers vertically */
-  justify-content: center; /* optional, centers horizontally too */
-  height: 100vh;  /* or whatever height you want */
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
 }
 
 .loading-img {
   display: block;
   margin: auto auto;
   width: 60%;
+}
+
+.warning-banner {
+  background-color: #660000;
+  opacity: 70%;
+  margin: 10px;
+  padding: 5px;
+  font-size: 12px;
+  border-radius: 10px;
 }

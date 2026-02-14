@@ -15,7 +15,7 @@ export default function ViewerPanel() {
           socket.current = io(process.env.REACT_APP_API_URL + "/ratmaze/widget", {
             path: "/socket.io",
             transports: ["websocket", "polling"],
-            auth: { id: auth.userId, token: auth.token }
+            auth: { token: auth.token }
           });
 
           socket.current.on("data_update", (payload) => {
@@ -36,6 +36,13 @@ export default function ViewerPanel() {
           </div>
         </div>
     }
+    {data && !data.user.permission_granted &&
+      <div className="warning-banner">
+        <p>You have been given the anonymous name: <strong>{data.user.username}</strong></p>
+        <p>To share your username, click the button at the bottom of this panel.</p>
+      </div>
+    }
+
     {data && data.game.is_live && <OnlinePanel data={data} socket={socket}/>}
     {data && !data.game.is_live && <OfflinePanel data={data} socket={socket}/>}
   </div>
