@@ -91,10 +91,11 @@
   font-size: 18px;
 }
 
-.timer-display {
-  font-size: 24px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.timer {
+  width: 40%;
+  display: grid;
+  place-items: center;
+  margin: 4px auto 0 auto;
+  aspect-ratio: 1 / 1;
+  opacity: 75%;
 }

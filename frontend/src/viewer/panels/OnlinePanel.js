@@ -2,49 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import DirectionPad from '../components/DirectionPad'
 import Item from '../components/Item'
 import DebugBar from '../components/DebugBar'
+import Timer from '../components/Timer'
 import './Panels.css'
 
 export default function OnlinePanel({data, socket}) {
-  const [timer, setTimer] = useState(0)
-  const [timerRunning, setTimerRunning] = useState(false)
-  const interval = useRef(null)
-
-  useEffect(() => {
-    if (interval.current) {
-      clearInterval(interval.current)
-      interval.current = null;
-    }
-
-    if (!data.game.next_turn) {
-      setTimer(0)
-      return
-    }
-
-    // Sometimes there is drift compared to local systems, so we make sure it does not exceed
-    // the length of the turn.
-    const nextTurn = Math.min(data.game.next_turn, (Date.now() / 1000) + data.game.turn_length)
-
-    const update = () => {
-      const now = Date.now() / 1000
-      const diff = Math.ceil(nextTurn - now)
-      console.log(nextTurn)
-      if (diff <= 0) {
-        setTimer(0)
-        clearInterval(interval.current)
-        interval.current = null
-      } else {
-        setTimer(diff)
-      }
-    }
-
-    update()
-    interval.current = setInterval(update, 100)
-
-    return () => {
-      clearInterval(interval.current)
-      interval.current = null
-    }
-  }, [data.game.next_turn])
 
   return (
     <div>
@@ -54,7 +15,7 @@ export default function OnlinePanel({data, socket}) {
           <span className="stat-label">Current Points:</span>
           <span className="stat-value">{data.user.current_points}</span>
         </div>
-        <p className="timer-display"><strong>{timer}</strong></p>
+        <Timer data={data}/>
         <div className="stat-item">
           <span className="stat-label">Points All-Time:</span>
           <span className="stat-value">{data.user.total_points}</span>
