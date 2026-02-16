@@ -79,6 +79,7 @@ class SocketHandler:
                 self.game_data.reset_shop()
             self.game_data.start_vote()
             self.update_everything()
+            self.user_manager.clear_cheese()
 
         @self.socket.on("update_directions", namespace="/ratmaze/game")
         def update_directions(data):
@@ -129,6 +130,7 @@ class SocketHandler:
                 "current_points": user.current_points,
                 "total_points": user.total_points,
                 "total_cheese": user.total_cheese,
+                "got_cheese": user.got_cheese,
                 "permission_granted": user.twitch_id != 0
             },
             "game": {

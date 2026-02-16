@@ -118,7 +118,9 @@ class GameData:
         self.reset_votes()
         self.reset_shop()
         self.live_event.set()
+        self.cheese_worthy = []
         self.cheese_count = 0
+        self.user_manager.clear_cheese()
 
     def end_game(self):
         self.reset_votes()
@@ -126,6 +128,7 @@ class GameData:
         self.next_turn = 0
         self.live_event.clear()
         self.can_vote_event.clear()
+        self.cheese_worthy = []
         self.offline_leaderboard = self.user_manager.get_top_users(self.offline_leaderboard_size, True)
 
     def reset_votes(self):

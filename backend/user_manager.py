@@ -18,6 +18,7 @@ class User:
         self.current_points = current_points
         self.total_points = total_points
         self.total_cheese = total_cheese
+        self.got_cheese = False
 
     def update(self):
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))
@@ -43,6 +44,7 @@ class User:
         self.current_points += points
         if award_cheese:
             self.total_cheese += 1
+            self.got_cheese = True
         self.update()
 
 
@@ -68,6 +70,10 @@ class UserManager:
     def refresh_users(self):
         for user_id, user in self.id_map.items():
             user.refresh()
+
+    def clear_cheese(self):
+        for user_id, user in self.id_map.items():
+            user.got_cheese = False
 
     def get_top_users(self, count, all_time=False):
         connection = sqlite3.connect(os.getenv('RATMAZE_DB'))

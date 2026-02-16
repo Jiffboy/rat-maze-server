@@ -3,10 +3,10 @@ import DirectionPad from '../components/DirectionPad'
 import Item from '../components/Item'
 import DebugBar from '../components/DebugBar'
 import Timer from '../components/Timer'
+import ScrollingText from '../components/ScrollingText'
 import './Panels.css'
 
 export default function OnlinePanel({data, socket}) {
-
   return (
     <div>
       {data.game.is_debug && <DebugBar socket={socket}/>}
@@ -16,6 +16,7 @@ export default function OnlinePanel({data, socket}) {
           <span className="stat-value">{data.user.current_points}</span>
         </div>
         <Timer data={data}/>
+        <ScrollingText data={data} text='🧀 Cheese get! 🧀' show={data.user.got_cheese} timestamp={data.game.next_turn}/>
         <div className="stat-item">
           <span className="stat-label">Points All-Time:</span>
           <span className="stat-value">{data.user.total_points}</span>
@@ -31,7 +32,7 @@ export default function OnlinePanel({data, socket}) {
       </div>
 
       {data.game.shop.map((item, index) => (
-        <Item data={item} balance={data.user.balance} socket={socket}/>
+        <Item key={item.name} data={item} balance={data.user.balance} socket={socket}/>
       ))}
     </div>
   );
