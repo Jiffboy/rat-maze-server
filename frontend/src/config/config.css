@@ -1,0 +1,35 @@
+.input {
+  display: inline-flex;
+  flex-direction: column;
+  margin: 15px;
+}
+
+.item-fields {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  margin-bottom: 10px;
+}
+
+.item-input-container {
+  display: grid;
+  width: 80%;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 20px auto;
+}
+
+.item-input {
+  background-color: darkgrey;
+  border: 2px solid black;
+  border-radius: 10px;
+}
+
+.item-input p {
+  height: 50px;
+  width: 80%;
+  margin: 0 auto 20px auto;
+}
+
+.item-input h2 {
+  margin-bottom: 5px;
+}

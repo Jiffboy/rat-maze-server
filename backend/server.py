@@ -4,10 +4,12 @@ from flask import Flask
 from socket_handler import SocketHandler
 from game_data import GameData
 from user_manager import UserManager
+from api import api_endpoint
 import time
 import argparse
 
 app = Flask(__name__)
+app.register_blueprint(api_endpoint)
 
 
 def timer_thread(game, sock):

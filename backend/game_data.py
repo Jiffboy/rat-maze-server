@@ -94,10 +94,10 @@ class GameData:
         self.cheese_worthy = []
 
         self.threshold = 2  # TODO: DB value
-        self.inc = 1  # TODO: DB value
+        self.inc = 1
         self.turn_len = 3  # TODO: DB value
-        self.shop_size = 5  # TODO: DB value
-        self.leaderboard_size = 5  # TODO: DB value
+        self.shop_size = 5
+        self.leaderboard_size = 5
         self.cheese_points = 20  # TODO: DBvalue
         self.offline_leaderboard_size = 10
 
